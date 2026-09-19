@@ -13,8 +13,14 @@ request_sudo_keepalive() {
     log_info "Requesting sudo access up front (kept alive for the rest of this command)..."
     sudo -v || die "Could not obtain sudo access."
 
+    # This ping has nothing useful to report either way: on success there's
+    # nothing to say, and on failure the loop can't act on it anyway (just
+    # retries in 60s) — any real sudo-needing command downstream handles its
+    # own failure (see lib/xcode.sh's softwareupdate fallback, for example).
+    # Redirected so it can't interject "sudo: a password is required" into
+    # the middle of unrelated output from this background process.
     while true; do
-        sudo -n true
+        sudo -n true >>"$LOG_FILE" 2>&1
         sleep 60
         kill -0 "$$" 2>/dev/null || exit
     done &
