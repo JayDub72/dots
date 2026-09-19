@@ -609,3 +609,63 @@ autoload-namespaced), and checks `exists("*FugitiveHead")` instead of
 just `g:loaded_fugitive` so it degrades gracefully rather than erroring
 again if fugitive's API ever moves. Verified: returns `[main]` inside a
 real git repo (tested in `~/.dotfiles`), `[]` outside one, no errors.
+
+## `dots` is now a real git repository (2026-09-19)
+
+Root commit `d76465725aab` — 34 files, everything except what
+`.gitignore` excludes (`config/backup.conf`, `config/auth.conf`,
+`logs/`, private key material). One thing caught before it went in:
+`docs/defaults_before.txt`, a 1.4MB/31k-line full `defaults read` dump
+covering every app's preferences on this Mac — not something that
+belongs in git history. Deleted, per your call, rather than gitignored.
+
+`dots baseline`/`dots rollback` are real, functional commands for the
+first time — ran `dots baseline` for real, correctly reported no changes
+(the initial commit already captured `dotfiles/`).
+
+Deliberately *not* done as part of this: pushing to GitHub
+(`jaydub72/dots`). Also not done: setting up Tart for VM testing — `tart`
+isn't installed on this Mac and no base VM image exists; both are a real
+one-time investment (installing it, then `tart create --from-ipsw=latest`
+actually downloads and runs a macOS installer), being treated as its own
+task rather than folded into this one.
+
+Housekeeping note for a future session: this file's chronological
+ordering got slightly scrambled in a couple of places during a long,
+fast-moving session (several `### ...continued` sections were appended
+via text-anchored edits, and a couple landed earlier in the file than
+their actual chronological position — e.g. the vim plugin
+trim/bootstrap/bug-fix/removal saga isn't perfectly in the order it
+happened). The content itself is accurate, just not perfectly ordered
+top-to-bottom. Not urgent to fix, but worth a cleanup pass if it ever
+causes real confusion.
+
+## Pushed to GitHub — public, not private (2026-09-19)
+
+Resolves the open question from the Review notes section above ("public
+vs. private... no decision recorded"). Created private first
+(`jaydub72/dots`, matching the target from Repo identity and location
+above), pushed successfully — then caught a real conflict: the Quick
+Start's curl+tar fresh-Mac bootstrap (README.md) only works against a
+*public* repo. It exists specifically so a stock Mac doesn't need `git`
+before Xcode CLT is installed (`git` itself triggers the CLT prompt,
+which `dots all` is supposed to handle as a later, controlled step) — an
+unauthenticated `curl` against a private repo's tarball just 403s,
+reintroducing the exact chicken-and-egg problem curl+tar was designed to
+avoid.
+
+Decision: switched to public (`gh repo edit --visibility public`),
+keeping the original zero-prerequisite bootstrap flow intact. Verified
+working: `curl -sSI` against the real Quick Start URL now 302-redirects
+to the tarball correctly.
+
+Consciously accepted, not scrubbed: this repo now publicly exposes real
+home network topology — Proxmox node IPs (192.168.1.197-199), several
+`*.home.lan` hostnames (NAS, Plex, a recipe app, a seedbox, monitoring,
+etc. — see `dotfiles/.ssh/config`), and this Mac's real computer name
+("tycho", hardcoded in `macos/defaults.sh`'s "Set computer name" step).
+None of it is directly exploitable (private IPs, LAN-only hostnames, no
+credentials anywhere), and plenty of public dotfiles repos carry this
+level of detail — but it's a real, deliberate tradeoff, not an oversight.
+If this ever needs revisiting, `git log` has full history of what
+changed and when.
