@@ -1,0 +1,11 @@
+{
+    "remoteHub.commitDirectlyWarning": "off",
+    "workbench.colorTheme": "Catppuccin Macchiato",
+    "git.autofetch": true,
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "workbench.iconTheme": "catppuccin-macchiato",
+    "workbench.productIconTheme": "material-product-icons",
+    "claudeCode.preferredLocation": "panel",
+    "redhat.telemetry.enabled": false
+}

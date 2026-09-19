@@ -1,0 +1,30 @@
+# config/auth.conf — real values. Gitignored; the tracked template is
+# config/auth.conf.example.
+#
+# Used by `dots auth` (lib/auth.sh) to restore the shared SSH key from
+# 1Password onto a machine that's never had it, per docs/ssh-setup-plan.md
+# Phase 6. This is the one place that key's 1Password location is named —
+# change it here, not in lib/auth.sh, if the vault/item ever gets renamed.
+
+# 1Password vault + item holding the SSH key (Phase 6: "Add Private Key" ->
+# "Import a Key File", saved as a real SSH Key item — not a password/note).
+# lib/auth.sh reads it via `op read "op://<vault>/<item>/private
+# key?ssh-format=openssh"` — the ssh-format query param is required (op
+# read's plain default for this field is PKCS#8 PEM, which ssh-keygen/
+# ssh-add can't use at all — verified 2026-09-19).
+#
+# IMPORTANT: if your vault's name has characters an op:// reference can't
+# parse (confirmed: '&' — and percent-encoding it does NOT work, op
+# rejects '%' too), use the vault's ID here instead of its name. Find it
+# with `op vault list`. Plain spaces in either name are fine (1Password's
+# own docs use "ssh key" with a space as their example).
+OP_SSH_KEY_VAULT="Infra"
+
+# >>> CONFIRM: the actual item title in 1Password. Phase 6 suggested
+# >>> "MacBook Pro SSH key — GitHub + Homelab" at the time, but that's
+# >>> machine-specific wording for a key that's actually shared across
+# >>> every machine (GitHub + all 3 Proxmox nodes + every VM/LXC trust the
+# >>> same key — see lib/auth.sh's header for why). Worth renaming the item
+# >>> in 1Password itself to something machine-agnostic first, e.g.
+# >>> "dots SSH key — GitHub + Homelab", then putting that exact title here.
+OP_SSH_KEY_ITEM=""

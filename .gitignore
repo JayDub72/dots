@@ -1,0 +1,25 @@
+# Machine/network-specific — never commit real values, only the .example
+config/backup.conf
+config/auth.conf
+
+# Private key material — config, not keys, is what belongs in dotfiles/.ssh/
+dotfiles/.ssh/id_*
+!dotfiles/.ssh/*.pub
+
+# Vim swap/backup/undo files — never belong in git regardless of where
+# they end up; undo files in particular can contain full edit history of
+# whatever was open, including sensitive files (see docs/planning.md).
+%*
+*.sw[a-z]
+*.un~
+.netrwhist
+
+# macOS noise
+.DS_Store
+
+# Run logs — default location is inside the repo (see lib/log.sh), not committed
+logs/
+
+# Old pre-rebuild content — kept locally, not meant to be tracked going
+# forward (see docs/planning.md, "Decisions locked")
+_archive/

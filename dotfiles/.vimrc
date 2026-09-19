@@ -1,0 +1,529 @@
+" ----------------------------------------------------------------------
+" | General Settings                                                   |
+" ----------------------------------------------------------------------
+
+set nocompatible                    " Don't make Vim vi-compatibile.
+
+syntax on                           " Enable syntax highlighting.
+
+if has('autocmd')
+    filetype plugin indent on
+    "           │     │    └──────── Enable file type detection.
+    "           │     └───────────── Enable loading of indent file.
+    "           └─────────────────── Enable loading of plugin files.
+endif
+
+set autoindent                      " Copy indent to the new line.
+
+set backspace=indent                " ┐
+set backspace+=eol                  " │ Allow `backspace`
+set backspace+=start                " ┘ in insert mode.
+
+set backupdir=~/.vim/backups        " Set directory for backup files.
+
+if has('wildignore')
+    set backupskip=/tmp/*           " ┐ Don't create backups
+    set backupskip+=/private/tmp/*  " ┘ for certain files.
+endif
+
+set clipboard=unnamed               " ┐
+                                    " │ Use the system clipboard
+if has('unnamedplus')               " │ as the default register.
+    set clipboard+=unnamedplus      " │
+endif                               " ┘
+
+set cpoptions+=$                    " When making a change, don't
+                                    " redisplay the line, and instead,
+                                    " put a `$` sign at the end of
+                                    " the changed text.
+
+if has('syntax')
+    set colorcolumn=73              " Highlight certain column(s).
+    set cursorline                  " Highlight the current line.
+endif
+
+set directory=~/.vim/swaps          " Set directory for swap files.
+set encoding=utf-8 nobomb           " Use UTF-8 without BOM.
+
+if has('cmdline_hist')
+    set history=5000                " Increase command line history.
+endif
+
+if has('extra_search')
+
+    set hlsearch                    " Enable search highlighting.
+
+    set incsearch                   " Highlight search pattern
+                                    " as it is being typed.
+endif
+
+set ignorecase                      " Ignore case in search patterns.
+
+
+set laststatus=2                    " Always show the status line.
+
+set lazyredraw                      " Do not redraw the screen while
+                                    " executing macros, registers
+                                    " and other commands that have
+                                    " not been typed.
+
+set listchars=tab:▸\                " ┐
+set listchars+=trail:·              " │ Use custom symbols to
+set listchars+=eol:↴                " │ represent invisible characters.
+set listchars+=nbsp:_               " ┘
+
+set magic                           " Enable extended regexp.
+" set mouse+=a                        " Enable mouse support.
+set mousehide                       " Hide mouse pointer while typing.
+set noerrorbells                    " Disable error bells.
+
+set nojoinspaces                    " When using the join command,
+                                    " only insert a single space
+                                    " after a `.`, `?`, or `!`.
+
+set nomodeline                      " Disable for security reasons.
+                                    " https://github.com/numirias/security/blob/cf4f74e0c6c6e4bbd6b59823aa1b85fa913e26eb/doc/2019-06-04_ace-vim-neovim.md#readme
+
+set nostartofline                   " Kept the cursor on the same column.
+set number                          " Show line number.
+
+if has('linebreak')
+    set numberwidth=5               " Increase the minimal number of
+                                    " columns used for the `line number`.
+endif
+
+set report=0                        " Report the number of lines changed.
+
+if has('cmdline_info')
+    set ruler                       " Show cursor position.
+endif
+
+set scrolloff=5                     " When scrolling, keep the cursor
+                                    " 5 lines below the top and 5 lines
+                                    " above the bottom of the screen.
+
+set shortmess=aAItW                 " Avoid all the hit-enter prompts.
+
+if has('cmdline_info')
+    set showcmd                     " Show the command being typed.
+endif
+
+set showmode                        " Show current mode.
+
+if has('syntax')
+    set spelllang=en_us             " Set the spellchecking language.
+endif
+
+set smartcase                       " Override `ignorecase` option
+                                    " if the search pattern contains
+                                    " uppercase characters.
+
+if has('syntax')
+    set synmaxcol=2500              " Limit syntax highlighting (this
+                                    " avoids the very slow redrawing
+                                    " when files contain long lines).
+endif
+
+set tabstop=4                       " ┐
+set softtabstop=4                   " │ Set global <TAB> settings.
+set shiftwidth=4                    " │
+set expandtab                       " ┘
+
+set ttyfast                         " Enable fast terminal connection.
+
+if has('persistent_undo')
+    set undodir=~/.vim/undos        " Set directory for undo files.
+    set undofile                    " Automatically save undo history.
+endif
+
+if has('virtualedit')
+    set virtualedit=all             " Allow cursor to be anywhere.
+endif
+
+set visualbell                      " ┐
+set noerrorbells                    " │ Disable beeping and window flashing.
+set t_vb=                           " ┘ https://vim.wikia.com/wiki/Disable_beeping
+
+if has('wildmenu')
+    set wildmenu                    " Enable enhanced command-line
+endif                               " completion (by hitting <TAB> in
+                                    " command mode, Vim will show the
+                                    " possible matches just above the
+                                    " command line with the first
+                                    " match highlighted).
+if has('windows')
+    set winminheight=0              " Allow windows to be squashed.
+endif
+
+" Prevent `Q` in `normal` mode from entering `Ex` mode.
+nmap Q <Nop>
+
+" ----------------------------------------------------------------------
+" | Insert Mode - Tab Completion                                       |
+" ----------------------------------------------------------------------
+
+" Make `Tab` autocomplete.
+
+inoremap <expr><TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" Make `Shift+Tab` insert `Tab` character.
+
+inoremap <S-TAB> <C-V><TAB>
+
+" ----------------------------------------------------------------------
+" | Helper Functions                                                   |
+" ----------------------------------------------------------------------
+
+function! PrettyPrint()
+
+    if ( &filetype == 'json' && (has('python3') || has('python')) )
+        %!python -m json.tool
+        norm! ggVG==
+    endif
+
+endfunction
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+function! StripBOM()
+    if has('multi_byte')
+        set nobomb
+    endif
+endfunction
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+function! StripTrailingWhitespaces()
+
+    " Save last search and cursor position.
+
+    let searchHistory = @/
+    let cursorLine = line(".")
+    let cursorColumn = col(".")
+
+    " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    " Strip trailing whitespaces.
+
+    %s/\s\+$//e
+
+    " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    " Restore previous search history and cursor position.
+
+    let @/ = searchHistory
+    call cursor(cursorLine, cursorColumn)
+
+
+endfunction
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+function! ToggleLimits()
+
+    " [51,73]
+    "
+    "   * Git commit message
+    "     http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+    "
+    " [81]
+    "
+    "   * general use
+    "     https://daniel.haxx.se/blog/2020/11/30/i-am-an-80-column-purist/
+
+    if ( &colorcolumn == "73" )
+        set colorcolumn+=51,81
+    else
+        set colorcolumn-=51,81
+    endif
+
+endfunction
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+function! ToggleRelativeLineNumbers()
+
+    if ( &relativenumber == 1 )
+        set number
+    else
+        set relativenumber
+    endif
+
+endfunction
+
+
+" ----------------------------------------------------------------------
+" | Automatic Commands                                                 |
+" ----------------------------------------------------------------------
+
+if has("autocmd")
+
+    " Autocommand Groups.
+    " http://learnvimscriptthehardway.stevelosh.com/chapters/14.html
+
+    " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    " Automatically reload the configurations from
+    " the `~/.vimrc` file whenever they are changed.
+
+    augroup auto_reload_vim_configs
+
+        autocmd!
+        autocmd BufWritePost vimrc source $MYVIMRC
+
+    augroup END
+
+    " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    " Correctly recognize files.
+
+    augroup correctly_recognize_files
+
+        autocmd!
+        autocmd BufEnter  gitconfig       :setlocal filetype=gitconfig
+        autocmd BufEnter .gitconfig.local :setlocal filetype=gitconfig
+
+    augroup END
+
+    " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    " Use relative line numbers.
+    " http://jeffkreeftmeijer.com/2012/relative-line-numbers-in-vim-for-super-fast-movement/
+
+    augroup relative_line_numbers
+
+        autocmd!
+
+        " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        " Automatically switch to absolute
+        " line numbers when Vim loses focus.
+
+        autocmd FocusLost * :set number
+
+        " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        " Automatically switch to relative
+        " line numbers when Vim gains focus.
+
+        autocmd FocusGained * :set relativenumber
+
+        " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        " Automatically switch to absolute
+        " line numbers when Vim is in insert mode.
+
+        autocmd InsertEnter * :set number
+
+        " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        " Automatically switch to relative
+        " line numbers when Vim is in normal mode.
+
+        autocmd InsertLeave * :set relativenumber
+
+
+    augroup END
+
+    " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    " Automatically strip whitespaces when files are saved.
+
+    augroup strip_whitespaces
+
+        " List of file types for which the whitespaces
+        " should not be removed:
+
+        let excludedFileTypes = []
+
+        " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        " Only strip the whitespaces if the file type is not
+        " in the excluded list.
+
+        autocmd!
+        autocmd BufWritePre * if index(excludedFileTypes, &ft) < 0 |
+            \ :call StripBOM() |
+            \ :call StripTrailingWhitespaces()
+
+    augroup END
+
+endif
+
+
+" ----------------------------------------------------------------------
+" | Color Scheme                                                       |
+" ----------------------------------------------------------------------
+
+set t_Co=256                   " Enable full-color support.
+
+set background=dark            " Use colors that look good
+                               " on a dark background.
+
+" ----------------------------------------------------------------------
+" | Key Mappings                                                       |
+" ----------------------------------------------------------------------
+
+" Use a different mapleader (default is "\").
+
+let mapleader = ","
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,* ] Search and replace the word under the cursor.
+
+nmap <leader>* :%s/\<<C-r><C-w>\>//<Left>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,cr] Calculate result.
+" http://vimcasts.org/e/56
+
+nmap <leader>cr 0yt=A<C-r>=<C-r>"<CR><Esc>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,cs] Clear search.
+
+map <leader>cs <Esc>:noh<CR>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,h ] Show hex dump.
+
+nmap <leader>h :%!xxd<CR>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,l ] Toggle `set list`.
+
+nmap <leader>l :set list!<CR>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,n ] Toggle `set relativenumber`.
+
+nmap <leader>n :call ToggleRelativeLineNumbers()<CR>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,pp] Pretty print
+
+map <Leader>pp :call PrettyPrint()<CR>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,sb] Strip BOM (Byte Order Mark).
+
+nmap <leader>sb :call StripBOM()<CR>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,sr] Strip carriage returns.
+
+nmap <leader>sr :%s/\r//g<CR>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,sw] Strip trailing whitespace.
+
+nmap <leader>sw :call StripTrailingWhitespaces()<CR>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,tl] Toggle show limits.
+
+nmap <leader>tl :call ToggleLimits()<CR>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,v ] Make the opening of the `.vimrc` file easier.
+
+nmap <leader>v :vsp $MYVIMRC<CR>
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+" [,W ] Sudo write.
+
+map <leader>W :w !sudo tee %<CR>
+
+
+" ----------------------------------------------------------------------
+" | Status Line                                                        |
+" ----------------------------------------------------------------------
+
+" Terminal types:
+"
+"   1) term  (normal terminals, e.g.: vt100, xterm)
+"   2) cterm (color terminals, e.g.: MS-DOS console, color-xterm)
+"   3) gui   (GUIs)
+
+highlight ColorColumn
+    \ term=NONE
+    \ cterm=NONE  ctermbg=237    ctermfg=NONE
+    \ gui=NONE    guibg=#073642  guifg=NONE
+
+highlight CursorLine
+    \ term=NONE
+    \ cterm=NONE  ctermbg=235  ctermfg=NONE
+    \ gui=NONE    guibg=#073642  guifg=NONE
+
+highlight CursorLineNr
+    \ term=bold
+    \ cterm=bold  ctermbg=NONE   ctermfg=178
+    \ gui=bold    guibg=#073642  guifg=Orange
+
+highlight LineNr
+    \ term=NONE
+    \ cterm=NONE  ctermfg=241    ctermbg=NONE
+    \ gui=NONE    guifg=#839497  guibg=#073642
+
+highlight User1
+    \ term=NONE
+    \ cterm=NONE  ctermbg=237    ctermfg=Grey
+    \ gui=NONE    guibg=#073642  guifg=#839496
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+set statusline=
+set statusline+=%1*            " User1 highlight
+set statusline+=\ [%n]         " Buffer number
+set statusline+=\ [%f]         " File path
+set statusline+=%m             " Modified flag
+set statusline+=%r             " Readonly flag
+set statusline+=%h             " Help file flag
+set statusline+=%w             " Preview window flag
+set statusline+=%y             " File type
+set statusline+=[
+set statusline+=%{&ff}         " File format
+set statusline+=:
+set statusline+=%{strlen(&fenc)?&fenc:'none'}  " File encoding
+set statusline+=]
+set statusline+=%=             " Left/Right separator
+set statusline+=%c             " File encoding
+set statusline+=,
+set statusline+=%l             " Current line number
+set statusline+=/
+set statusline+=%L             " Total number of lines
+set statusline+=\ (%P)\        " Percent through file
+
+" Example result:
+"
+"  [1] [vim/vimrc][vim][unix:utf-8]            17,238/381 (59%)
+
+
+" ----------------------------------------------------------------------
+" | Local Settings                                                     |
+" ----------------------------------------------------------------------
+
+" Load local settings if they exist.
+"
+" [!] The following needs to remain at the end of this file in
+"     order to allow any of the above settings to be overwritten
+"     by the local ones.
+
+if filereadable(glob("~/.vimrc.local"))
+    source ~/.vimrc.local
+endif

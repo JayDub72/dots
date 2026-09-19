@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Template for scheduling `dots backup` via launchd instead of cron — see
+  docs/planning.md step 6a for why (cron silently skips a run if the Mac
+  is asleep at the scheduled time; launchd catches it up on wake instead).
+
+  To use:
+    1. Copy to ~/Library/LaunchAgents/com.dots.backup.plist
+    2. Replace __DOTS_ROOT__ below with the absolute path to this repo,
+       and __HOME__ with your absolute home directory (plist values don't
+       get shell/env expansion, so both need literal substitution)
+    3. Decide the actual schedule in StartCalendarInterval (currently a
+       placeholder — daily/weekly cadence and time-of-day aren't decided
+       yet, see docs/planning.md step 6c)
+    4. launchctl load ~/Library/LaunchAgents/com.dots.backup.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dots.backup</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__DOTS_ROOT__/bin/dots</string>
+        <string>backup</string>
+    </array>
+
+    <!-- Placeholder: fill in once daily-vs-weekly and time-of-day are decided. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>__HOME__/Documents/Logs/dots/launchd-backup.log</string>
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Documents/Logs/dots/launchd-backup-error.log</string>
+</dict>
+</plist>

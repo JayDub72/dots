@@ -1,0 +1,48 @@
+# config/backup.conf.example — copy to config/backup.conf and fill in.
+# config/backup.conf itself is gitignored (it's machine/network-specific,
+# not something to commit) — this .example is the tracked template.
+
+# Synology NAS connection
+NAS_HOST="nas"                    # the `Host nas` alias in dotfiles/.ssh/config — not a raw hostname,
+                                   # so connection details (real HostName, key, user) live in one place
+NAS_USER="jason"                  # confirm this matches the actual DSM account name
+NAS_SSH_PORT="22"                 # ssh-setup-plan.md notes home hosts on default port; adjust if you change this
+NAS_SHARE_PATH="/volume1/backups" # `backups` promoted to its own top-level Shared Folder (2026-09-19) —
+                                   # >>> confirm the volume number: Control Panel -> Shared Folder ->
+                                   # >>> Edit -> Location on the NAS shows the real absolute path
+
+# Local paths to back up (source -> same relative path under NAS_SHARE_PATH)
+LOCAL_PATHS=(
+    "${HOME}/Documents"
+    "${HOME}/Downloads"
+)
+
+# Still open per docs/planning.md — leave commented until decided:
+# - Downloads retention/exclusion (fill in RSYNC_EXCLUDES below if so)
+# - remote (off-LAN) access strategy — see nas_is_reachable() in lib/nas.sh,
+#   the one function to change when this gets decided
+RSYNC_EXCLUDES=(
+    # "*.dmg"
+    # "*.pkg"
+)
+
+# Safety net: `dots backup` is a one-way push with --delete, meaning local
+# is treated as truth and the NAS is pruned to match it. On a fresh Mac (or
+# any accidental local data loss) BEFORE you've run `dots restore`, that
+# would delete your real backed-up data to match empty local folders.
+# BACKUP_MAX_DELETE caps how many files a single backup run is allowed to
+# delete from the NAS before it aborts the rest and refuses to continue —
+# see lib/backup.sh.
+#
+# >>> DO NOT SET THIS TO 0. <<<
+# Verified empirically 2026-09-19 against this Mac's actual /usr/bin/rsync
+# (Apple's openrsync, not upstream rsync — its behavior isn't guaranteed to
+# match rsync's documentation): 0 means UNLIMITED deletions on this
+# platform, not zero. This is the opposite of what "0" suggests and would
+# silently disable this entire safety net.
+#
+# Pick a real positive number comfortably above your normal day-to-day
+# churn in Documents/Downloads, but well below "this is basically everything
+# on the NAS." 10 is a conservative starting point — raise it if legitimate
+# backups start getting blocked.
+BACKUP_MAX_DELETE=10

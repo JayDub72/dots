@@ -1,0 +1,80 @@
+# ~/.aliases — sourced by dotfiles/.zshrc (and .profile, for non-zsh
+# login-shell contexts).
+
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias cd..="cd .."
+
+alias cp="cp -iv"
+alias mkdir="mkdir -pv"
+alias mv="mv -iv"
+
+# Recoverable delete — trash (Brewfile) moves to Trash instead of
+# permanently deleting. rmrf is the explicit escape hatch for when you
+# actually mean permanent, recursive deletion.
+alias rm="trash"
+alias rmrf="command rm -rf"
+
+alias :q="exit"
+alias c="clear"
+alias ch="history -c && > ~/.zsh_history"
+alias e="vim --"
+alias g="git"
+alias ls='eza -a --group-directories-first --no-quotes'
+alias ll='eza --long --header --git --all --group-directories-first --no-quotes'
+alias m="man"
+alias map="xargs -n1"
+alias path='printf "%b\n" "${PATH//:/\\n}"'
+alias q="exit"
+
+# Lock screen.
+alias afk="osascript -e 'tell application \"System Events\" to sleep'"
+
+# Homebrew shortcuts.
+alias brewd="brew doctor"
+alias brewi="brew install"
+alias brewr="brew uninstall"
+alias brews="brew search"
+alias brewu="brew update --quiet && brew upgrade && brew cleanup"
+
+alias clear-dns-cache="sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder"
+
+# Empty the trash (main HDD + mounted volumes) and clear Apple's system
+# logs, to speed up shell startup.
+alias empty-trash="sudo rm -frv /Volumes/*/.Trashes; \
+                   sudo rm -frv ~/.Trash; \
+                   sudo rm -frv /private/var/log/asl/*.asl; \
+                   sqlite3 ~/Library/Preferences/com.apple.LaunchServices.QuarantineEventsV* 'delete from LSQuarantineEvent'"
+
+alias hide-desktop-icons="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
+alias show-desktop-icons="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
+
+alias o="open"
+
+alias update="sudo softwareupdate --install --all && brew update --quiet && brew upgrade && brew cleanup"
+
+alias cat='bat'
+alias grep='grep --color'
+alias more='bat -p'
+alias p='cd ~/Documents/github'
+
+# find/disk util aliases
+alias dud='du -d 1 -h'
+alias duf='du -sh *'
+alias fd='find . -type d -name'
+alias ff='find . -type f -name'
+
+# IP addresses
+alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
+alias iplocal="ipconfig getifaddr en0"
+alias ips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }'"
+alias ifactive="ifconfig | pcregrep -M -o '^[^\t:]+:([^\n]|\n\t)*status: active'"
+
+alias net_restart='sudo killall -HUP mDNSResponder'
+alias network.connections='lsof -l -i +L -R -V'
+alias network.established='lsof -l -i +L -R -V | grep ESTABLISHED'
+alias network.externalip='curl -s http://checkip.dyndns.org/ | sed "s/[a-zA-Z<>/ :]//g"'
+alias network.internalip="ifconfig en0 | egrep -o '([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)'"
+
+alias reload="exec $SHELL -l"

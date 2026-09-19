@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+#
+# dots — the dots entry point. One subcommand per concern, so any piece
+# can be run, re-run, or corrected independently (docs/planning.md outcome
+# #6). See docs/planning.md and docs/tart.md before changing behavior here.
+#
+# Usage:
+#   dots all            Full run: xcode -> homebrew -> apps -> dotfiles -> macos ->
+#                       auth -> restore (restore is last, interactive — decline
+#                       and it prints the command to run it later instead of
+#                       failing the run)
+#   dots xcode          Install Xcode Command Line Tools only
+#   dots homebrew       Install/verify Homebrew only
+#   dots apps           Install everything in Brewfile
+#   dots maintenance    brew update && upgrade && cleanup && doctor
+#   dots dotfiles       Symlink dotfiles/ into $HOME
+#   dots macos          Apply macos/defaults.sh
+#   dots auth           Restore the shared SSH key from 1Password, verify
+#                       GitHub + NAS trust (see lib/auth.sh)
+#   dots baseline       Commit current dotfiles/ state as the new truth
+#   dots rollback       Reset dotfiles/ to the last baseline (discards changes)
+#   dots backup         Push ~/Documents and ~/Downloads to the NAS now
+#   dots backup --force Same, but bypass BACKUP_MAX_DELETE for this one run
+#                       (a deliberate large local deletion you want mirrored)
+#   dots restore        Pull them back down from the NAS (asks to confirm)
+#
+# Safe to re-run: every subcommand is meant to be idempotent.
+#
+set -uo pipefail
+
+readonly DOTS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly DOTS_COMMAND="${1:-help}"
+
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/log.sh"
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/sudo.sh"
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/xcode.sh"
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/homebrew.sh"
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/apps.sh"
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/dotfiles.sh"
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/macos-defaults.sh"
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/auth.sh"
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/nas.sh"
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/backup.sh"
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/restore.sh"
+# shellcheck source=/dev/null
+source "${DOTS_ROOT}/lib/baseline.sh"
+
+print_help() {
+    sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+}
+
+case "$DOTS_COMMAND" in
+    all)
+        [[ "$(uname -s)" == "Darwin" ]] || die "This only runs on macOS."
+        [[ "$EUID" -ne 0 ]] || die "Don't run this as root/sudo — run as your normal user; it asks for sudo itself."
+        request_sudo_keepalive
+        run_step "Xcode Command Line Tools" cmd_xcode
+        run_step "Homebrew" cmd_homebrew
+        run_step "Applications (Brewfile)" cmd_apps
+        run_step "Dotfiles" cmd_dotfiles
+        run_step "macOS defaults" cmd_macos
+        run_step "Auth (SSH/GitHub/1Password)" cmd_auth
+        run_step "Restore from NAS" cmd_restore
+        print_summary
+        ;;
+    xcode)       request_sudo_keepalive; cmd_xcode ;;
+    homebrew)    cmd_homebrew ;;
+    apps)        request_sudo_keepalive; cmd_apps ;;
+    maintenance) cmd_maintenance ;;
+    dotfiles)    cmd_dotfiles ;;
+    macos)       request_sudo_keepalive; cmd_macos ;;
+    auth)        cmd_auth ;;
+    baseline)    cmd_baseline ;;
+    rollback)    cmd_rollback ;;
+    backup)      cmd_backup "${2:-}" ;;
+    restore)     cmd_restore ;;
+    help|--help|-h) print_help ;;
+    *) die "Unknown command: ${DOTS_COMMAND} (see 'dots help')" ;;
+esac

@@ -1,0 +1,31 @@
+# ~/.exports — environment variables. Sourced by dotfiles/.zshrc.
+#
+# The previous version of this file (~/.dotfiles/src/shell/exports) was
+# symlinked into place but never actually sourced by anything (.zshrc and
+# .profile only ever sourced .aliases/.functions) — none of it was taking
+# effect. Also mostly bash-only: HISTCONTROL/HISTFILESIZE/HISTIGNORE and
+# the whole PROMPT_COMMAND/update_terminal_cwd block don't exist in zsh at
+# all. Dropped that dead weight; kept what's actually portable, replaced
+# the history variables with zsh's real equivalents below.
+
+export EDITOR="vim"
+
+export LANG="en_US"
+export LC_ALL="en_US.UTF-8"
+
+# Custom `less` colors for `man` pages.
+export LESS_TERMCAP_md="$(tput bold 2>/dev/null; tput setaf 2 2>/dev/null)"
+export LESS_TERMCAP_me="$(tput sgr0 2>/dev/null)"
+
+# Don't clear the screen after quitting a `man` page.
+export MANPAGER="less -X"
+
+export NODE_REPL_HISTORY_SIZE=10000
+export PYTHONIOENCODING="UTF-8"
+
+# zsh-native history config (HISTSIZE alone doesn't persist anything
+# without SAVEHIST + HISTFILE).
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE="${HOME}/.zsh_history"
+setopt HIST_IGNORE_DUPS HIST_IGNORE_SPACE SHARE_HISTORY

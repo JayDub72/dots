@@ -1,0 +1,78 @@
+# ~/.functions — sourced by dotfiles/.zshrc (and .profile).
+
+# Create a new git repo with one README commit and cd into it
+function gitnr() {
+  mkdir "$1" && cd "$1" && git init && touch README.md && git add README.md && git commit -m "First commit"
+}
+
+# Open a man page in Preview.app
+function manp() {
+  man -t "$1" | open -f -a /System/Applications/Preview.app
+}
+
+# Toggle Finder's hidden/dotfile visibility
+function showhiddenfiles() {
+  defaults write com.apple.Finder AppleShowAllFiles YES
+  osascript -e 'tell application "Finder" to quit'
+  sleep 0.25
+  osascript -e 'tell application "Finder" to activate'
+}
+
+function hidehiddenfiles() {
+  defaults write com.apple.Finder AppleShowAllFiles NO
+  osascript -e 'tell application "Finder" to quit'
+  sleep 0.25
+  osascript -e 'tell application "Finder" to activate'
+}
+
+# curlheader $header $url  -> just that response header
+# curlheader $url          -> all response headers
+function curlheader() {
+  if [[ -z "$2" ]]; then
+    curl -k -s -D - "$1" -o /dev/null
+  else
+    curl -k -s -D - "$2" -o /dev/null | grep "$1:"
+  fi
+}
+
+# Timing breakdown for a single curl request
+function curltime() {
+  curl -w "   time_namelookup:  %{time_namelookup}\n\
+      time_connect:  %{time_connect}\n\
+   time_appconnect:  %{time_appconnect}\n\
+  time_pretransfer:  %{time_pretransfer}\n\
+     time_redirect:  %{time_redirect}\n\
+time_starttransfer:  %{time_starttransfer}\n\
+--------------------------\n\
+        time_total:  %{time_total}\n" -o /dev/null -s "$1"
+}
+
+function fixperms() {
+  find . \( -name "*.sh" -or -type d \) -exec chmod 755 {} \; \
+    && find . -type f ! -name "*.sh" -exec chmod 644 {} \;
+}
+
+# Create a directory and cd into it
+function mkd() {
+  mkdir -p "$@" && cd "$_"
+}
+
+# Count files matching a pattern under a directory. Was previously an
+# alias named `fc`, which shadows the zsh/bash `fc` history builtin —
+# renamed to avoid that collision.
+function fcount() {
+  find "$1" -type f 2>/dev/null | wc -l
+}
+
+# Directory tree, excluding common noise
+function tre() {
+  tree -aC -I '.git|node_modules|bower_components|.DS_Store' --dirsfirst "$@"
+}
+
+function weather() {
+  curl "wttr.in/$1"
+}
+
+function ipinfo() {
+  curl "ipinfo.io/$1"
+}
