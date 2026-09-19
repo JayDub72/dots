@@ -31,6 +31,20 @@ set -uo pipefail
 readonly DOTS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly DOTS_COMMAND="${1:-help}"
 
+# Put brew on PATH for this invocation if it's already installed, before
+# anything else runs. lib/homebrew.sh's own `eval "$(brew shellenv)"` only
+# affects that one script execution — it doesn't persist to a later,
+# separate `./bin/dots <subcommand>` invocation (a new process), and won't
+# until .zshrc is deployed via `dots dotfiles`, which comes after `apps` in
+# the `dots all` sequence. Without this, running e.g. `dots apps` on its
+# own right after `dots homebrew` fails with "brew not available" even
+# though it's genuinely installed — found live testing in a fresh Tart VM.
+if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+fi
+
 # shellcheck source=/dev/null
 source "${DOTS_ROOT}/lib/log.sh"
 # shellcheck source=/dev/null
