@@ -22,8 +22,11 @@ cmd_xcode() {
         | tail -n1)"
 
     if [[ -n "$clt_label" ]]; then
-        log_info "Installing via softwareupdate: ${clt_label}"
-        if softwareupdate -i "$clt_label" --verbose; then
+        log_info "Installing via softwareupdate: ${clt_label} (this can take a while; progress goes to ${LOG_FILE}, not the screen)"
+        # --verbose kept for a detailed log, but redirected — softwareupdate's
+        # progress output ("Downloaded, Downloaded, Installing...") is noisy
+        # and not useful on-screen; log_info/log_success are the on-screen story.
+        if softwareupdate -i "$clt_label" --verbose >>"$LOG_FILE" 2>&1; then
             rm -f "$placeholder"
         else
             rm -f "$placeholder"
