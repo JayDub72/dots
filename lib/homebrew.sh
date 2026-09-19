@@ -4,9 +4,10 @@ cmd_homebrew() {
     if command -v brew &>/dev/null; then
         log_info "Homebrew already installed ($(brew --version | head -n1))."
     else
-        log_info "Installing Homebrew..."
+        log_info "Installing Homebrew (output goes to ${LOG_FILE}, not the screen)..."
         NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
-            || { log_error "Homebrew installer failed."; return 1; }
+            >>"$LOG_FILE" 2>&1 \
+            || { log_error "Homebrew installer failed — see ${LOG_FILE}."; return 1; }
     fi
 
     local brew_bin=""

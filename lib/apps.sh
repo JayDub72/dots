@@ -15,8 +15,8 @@ cmd_apps() {
         return 2
     fi
 
-    log_info "Installing packages, casks, and apps from ${BREWFILE} (this can take a while)..."
-    if brew bundle --file="$BREWFILE" 2>&1 | tee -a "$LOG_FILE"; then
+    log_info "Installing packages, casks, and apps from ${BREWFILE} (this can take a while; per-file install output goes to ${LOG_FILE}, not the screen)..."
+    if brew bundle --file="$BREWFILE" >>"$LOG_FILE" 2>&1; then
         log_success "brew bundle completed."
     else
         log_warn "brew bundle reported one or more failures; check ${LOG_FILE} for details."
@@ -43,8 +43,12 @@ cmd_apps() {
 
 cmd_maintenance() {
     command -v brew &>/dev/null || { log_error "brew not available."; return 1; }
-    log_info "Running brew maintenance: update, upgrade, cleanup, doctor..."
-    brew update && brew upgrade && brew cleanup
-    brew doctor || log_warn "brew doctor reported issues (see above) — not treated as fatal."
+    log_info "Running brew maintenance: update, upgrade, cleanup, doctor (output goes to ${LOG_FILE}, not the screen)..."
+    if brew update >>"$LOG_FILE" 2>&1 && brew upgrade >>"$LOG_FILE" 2>&1 && brew cleanup >>"$LOG_FILE" 2>&1; then
+        log_success "brew update/upgrade/cleanup completed."
+    else
+        log_warn "brew update/upgrade/cleanup reported an issue; check ${LOG_FILE} for details."
+    fi
+    brew doctor >>"$LOG_FILE" 2>&1 || log_warn "brew doctor reported issues — not treated as fatal, see ${LOG_FILE}."
     log_success "Brew maintenance complete."
 }
