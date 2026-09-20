@@ -90,14 +90,27 @@ _auth_check_1password() {
     local accounts
     accounts="$(op account list)"
     if [[ $? -ne 0 || -z "$accounts" ]]; then
-        # This is an expected state on a fresh machine, not a failure —
-        # 1Password sign-in is a genuinely manual, human-verified step
-        # (see the header comment at the top of this file) that nothing
-        # here can script past. Skipping (return 2) rather than failing
-        # (return 1) so it shows as a clean next-step in the run summary,
-        # not noise from running a step known in advance not to work yet.
-        log_warn "1Password CLI isn't signed in to any account yet — this is expected on a machine that's never had it set up. NEXT STEP: open the 1Password app, sign into your account, then enable Settings -> Developer -> 'Integrate with 1Password CLI' (preferred — no separate CLI sign-in to manage), or sign in directly via the CLI. Then re-run 'dots auth'."
-        return 2
+        # Desktop integration being enabled isn't always enough on its own
+        # to have an active session — `op signin` is what actually starts
+        # one, and once integration + the app are properly set up this
+        # typically just works (or needs a quick biometric/confirmation
+        # via the app), no separate manual account needed. Found live
+        # 2026-09-19. Try it before giving up rather than immediately
+        # telling the user to do this by hand.
+        log_info "No active 1Password CLI session yet — trying 'op signin'..."
+        op signin
+        accounts="$(op account list)"
+        if [[ $? -ne 0 || -z "$accounts" ]]; then
+            # Still nothing after actually trying — now it's a genuine
+            # "needs a human" state, not a failure. 1Password sign-in is
+            # a genuinely manual, human-verified step (see the header
+            # comment at the top of this file) that nothing here can
+            # script past. Skipping (return 2) rather than failing
+            # (return 1) so it shows as a clean next-step in the run
+            # summary, not noise from a step known not to work yet.
+            log_warn "1Password CLI still isn't signed in to any account after trying 'op signin' — this is expected on a machine that's never had it set up. NEXT STEP: open the 1Password app, sign into your account, then enable Settings -> Developer -> 'Integrate with 1Password CLI', and confirm 'Keep 1Password in the system tray' is also on. Then re-run 'dots auth'."
+            return 2
+        fi
     fi
     log_success "1Password CLI is signed in."
 }
