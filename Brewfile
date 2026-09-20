@@ -17,22 +17,6 @@
 #   - If Ansible gets used (per docs/ssh-setup-plan.md Phase 7):
 #     brew "ansible"
 
-# --- Taps -----------------------------------------------------------------
-tap "cirruslabs/cli"  # tart — see docs/tart.md. Known issue as of 2026-09-19:
-                       # this tap's tart.rb and its softnet.rb dependency both
-                       # use deprecated `depends_on :macos => :version` syntax
-                       # current Homebrew refuses to load ("Calling `depends_on
-                       # :macos` with `depends_on macos:` is disabled"). Fixed
-                       # locally by deleting that line from the cached formula
-                       # files under $(brew --repo cirruslabs/cli)/*.rb — NOT
-                       # a dots-managed fix, so a fresh `brew tap cirruslabs/cli`
-                       # on another machine will hit this again until upstream
-                       # actually fixes it. Also: Homebrew now requires
-                       # `brew trust cirruslabs/cli` before installing from an
-                       # unfamiliar tap for the first time — `brew bundle`
-                       # (`dots apps`) will fail on this entry on a fresh
-                       # machine until that's run once, manually.
-
 # ============================================================================
 # Formulae (CLI tools & libraries)
 # ============================================================================
@@ -44,13 +28,6 @@ brew "git-flow"  # Extensions to follow Vincent Driessen's branching model
 brew "git-lfs"  # Git extension for versioning large files
 brew "gh"  # GitHub command-line tool
 brew "libgit2"  # C library of Git core methods, re-entrant and linkable
-
-# --- VM Testing (host-only tool, see docs/tart.md) --------------------------
-# Not something a rebuilt machine "needs" the way the rest of this file is —
-# it's for testing dots itself in a disposable VM before trusting it on real
-# hardware. Included per explicit request, not because every fresh Mac this
-# Brewfile sets up should have it.
-brew "cirruslabs/cli/tart"  # Run macOS and Linux VMs on Apple Hardware
 
 # --- Shell, Terminal & Prompt ----------------------------------------------
 brew "bat"  # Clone of cat(1) with syntax highlighting and Git integration

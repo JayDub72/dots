@@ -1,5 +1,15 @@
 # Testing `dots` with Tart
 
+**Status (2026-09-19): superseded by UTM for actual testing.** A real,
+reproducible stall was hit testing `dots all` in Tart (`brew bundle`
+downloads progressing then permanently hanging, `Cellar`/`Caskroom`
+never populating — even on a freshly-recreated base VM) that never got
+root-caused; the same test in UTM worked cleanly. `tart`/`cirruslabs/cli`
+removed from the Brewfile as a result — see `docs/planning.md` for the
+full incident. This doc is kept as reference in case Tart's issue is
+ever worth revisiting, but UTM is what's actually been used for testing
+since.
+
 This is a **validation-only** workflow — it exists to let you watch a real macOS
 Setup-Assistant-to-configured-desktop run of `./bin/dots all` in a disposable VM
 before trusting it on real hardware. It is not part of how you'll actually use

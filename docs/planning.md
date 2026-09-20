@@ -870,3 +870,27 @@ a substitute for it" — that was written in good faith but not actually
 enforced anywhere until a real near-miss forced the issue. When a
 comment describes a safety property, check whether the code actually
 guarantees it or just hopes for it.
+
+## Removed tart/cirruslabs from the Brewfile (2026-09-20)
+
+UTM worked cleanly for testing; Tart's stall (see above — real,
+reproducible, never root-caused, even survived a fresh `dots-base`
+rebuild) didn't. Rather than keep carrying a tool that isn't actually
+being used, and that adds real friction on every fresh machine (the
+untrusted-tap gate needing a manual `brew trust cirruslabs/cli` before
+`dots apps` can even complete), removed `tap "cirruslabs/cli"` and
+`brew "cirruslabs/cli/tart"` from the Brewfile entirely. `docs/tart.md`
+kept as reference with a status note at the top, in case Tart's issue is
+ever worth revisiting — UTM is what's actually been used since.
+
+Two other real findings from this round of testing, documented in
+`README.md`'s "Before this is done" section rather than repeated here:
+`microsoft-office`'s cask install still fails the same way (not
+root-caused), and `backblaze`'s cask needs a manual follow-up step to
+actually finish (`open .../Backblaze Installer.app` — by cask design,
+not a bug). Also confirmed: `dots auth`/NAS failing on this fresh VM was
+the expected cascade of 1Password never having been signed in on it yet
+(same one-time manual step as before), not a regression — and the
+Bluetooth daemon unload/reload errors in `macos/defaults.sh` are an
+expected VM limitation (no real Bluetooth hardware), same category as
+the Touch ID sudo failure.

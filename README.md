@@ -62,4 +62,19 @@ Pushed to GitHub as [`jaydub72/dots`](https://github.com/JayDub72/dots)
 (public — see `docs/planning.md` for why). A few things still open, all
 tracked there: `macos/defaults.sh`'s actual settings content hasn't had a
 full review pass, Downloads retention/exclusion within the NAS backup,
-off-LAN NAS access, and Tart VM testing (not yet set up on this Mac).
+off-LAN NAS access.
+
+Two known issues from real `dots all` test runs (both reproduced more
+than once — see `docs/planning.md` for the full history):
+
+- **`microsoft-office`'s cask install fails.** `/usr/sbin/installer`
+  exits 1 with only `"installer: The install failed.."` — no more detail
+  available. Not root-caused yet; could be VM-specific or a genuine
+  installer issue independent of virtualization.
+- **`backblaze`'s cask only places an installer, doesn't complete
+  setup.** This is by Homebrew cask design (a "manual installer" cask),
+  not a bug — after `dots apps` runs, finish it yourself:
+  ```sh
+  open /opt/homebrew/Caskroom/backblaze/*/Backblaze\ Installer.app
+  ```
+  (the `*` matches whatever version actually installed).
