@@ -83,8 +83,14 @@ _auth_check_1password() {
     # prompt earlier this session. Letting it print directly means the
     # prompt is visible and answerable; log_info below just frames it.
     log_info "Checking 1Password CLI sign-in (this may prompt you directly — answer it if so)..."
-    if ! op account list; then
-        log_error "1Password CLI isn't signed in. Open the 1Password app, sign into your account, then enable Settings -> Developer -> 'Integrate with 1Password CLI' (preferred — no separate CLI sign-in to manage), or sign in directly via the CLI if you just saw a prompt for that. Re-run 'dots auth' once that's done."
+    # Only stdout is captured here (to check it's actually non-empty,
+    # not just exit-code-0 — op account list returns 0 with zero output
+    # when nothing is configured, found live 2026-09-19). stderr is left
+    # alone so an interactive prompt on that stream still shows directly.
+    local accounts
+    accounts="$(op account list)"
+    if [[ $? -ne 0 || -z "$accounts" ]]; then
+        log_error "1Password CLI isn't signed in to any account. Open the 1Password app, sign into your account, then enable Settings -> Developer -> 'Integrate with 1Password CLI' (preferred — no separate CLI sign-in to manage), or sign in directly via the CLI if you just saw a prompt for that. Re-run 'dots auth' once that's done."
         return 1
     fi
     log_success "1Password CLI is signed in."
