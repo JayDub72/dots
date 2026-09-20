@@ -1,9 +1,8 @@
 # lib/apps.sh — install everything in the Brewfile.
 #
-# The Brewfile's actual contents are not decided yet (see docs/planning.md
-# step 3 — "I have NOT given you the list of applications to install yet").
-# This module is the mechanism; it works against whatever Brewfile exists,
-# including the current placeholder.
+# This module is just the mechanism; it works against whatever Brewfile
+# exists. The Brewfile's actual contents (locked decisions, grouping,
+# gotchas) are documented inline in the Brewfile itself.
 
 readonly BREWFILE="${DOTS_ROOT}/Brewfile"
 
@@ -23,14 +22,14 @@ cmd_apps() {
         return 1
     fi
 
-    # Known gotcha (see docs/ssh-setup-plan.md, Phase 3): if this Brewfile
-    # ever gains `brew "openssh"`, Homebrew's build sits ahead of /usr/bin
-    # on PATH and its ssh/ssh-add don't support Keychain integration at
-    # all — silently breaking passphrase-free SSH. If openssh gets added
-    # here, `brew unlink openssh` right after, so /usr/bin/ssh keeps
-    # resolving first.
+    # Known gotcha: the Brewfile installs `brew "openssh", link: false`
+    # deliberately — Homebrew's build sitting ahead of /usr/bin on PATH
+    # would break Keychain-based passphrase-free SSH silently (its
+    # ssh/ssh-add don't support Keychain integration at all). This check
+    # catches it if that ever regresses (a Brewfile edit drops `link:
+    # false`, or someone links it by hand).
     if brew list --formula 2>/dev/null | grep -qx openssh; then
-        log_warn "openssh is installed via Homebrew — confirm it's unlinked (brew unlink openssh) or Keychain-based SSH auth may silently stop working. See docs/ssh-setup-plan.md."
+        log_warn "openssh is installed via Homebrew — confirm it's unlinked (brew unlink openssh) or Keychain-based SSH auth may silently stop working."
     fi
 
     log_info "Verifying bundle against Brewfile..."

@@ -1,6 +1,6 @@
 # macos/defaults.sh — the single file of `defaults write` commands for
 # settings that should stay static (trackpad, keyboard, Finder, Dock,
-# screenshots, etc. — see docs/planning.md outcome #3a).
+# screenshots, etc.) — as opposed to dotfiles/, which changes more often.
 #
 # Pulled from the old ~/.dotfiles preference scripts and adapted to this
 # repo's conventions, not invented. Some settings require administrator
@@ -285,8 +285,8 @@ macos_apply "defaults write org.mozilla.firefox AppleEnableSwipeNavigateWithScro
 
 
 # iTerm section removed — the terminal decision is Ghostty, not iTerm2
-# (see docs/planning.md locked decisions and the Brewfile). Ghostty's
-# config isn't `defaults write` at all — it's a plain text file at
+# (locked decision, see CLAUDE.md/Brewfile). Ghostty's config isn't
+# `defaults write` at all — it's a plain text file at
 # ~/.config/ghostty/config, a separate dotfile to write, not a defaults
 # domain to migrate here.
 

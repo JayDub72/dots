@@ -1,9 +1,9 @@
 # lib/auth.sh — restore the shared SSH key from 1Password onto a machine
 # that's never had it, then verify GitHub + NAS trust actually work.
 #
-# "Shared" is the operative word: docs/ssh-setup-plan.md deliberately uses
-# one ed25519 key across GitHub and the whole homelab (Proxmox nodes, VMs/
-# LXCs, the NAS) rather than a fresh key per machine. That means a new
+# "Shared" is the operative word: this deliberately uses one ed25519 key
+# across GitHub and the whole homelab (Proxmox nodes, VMs/LXCs, the NAS)
+# rather than a fresh key per machine. That means a new
 # machine doesn't need to register anything new with any of those hosts —
 # it needs the exact same private key restored locally, then wired into
 # Keychain. 1Password is the only viable source for that: it's the one
@@ -43,7 +43,7 @@ _auth_create_config() {
     log_warn "No config/auth.conf found — let's create it now."
     echo
     echo "This is the 1Password vault + item holding your shared SSH key"
-    echo "(see docs/ssh-setup-plan.md Phase 6, and config/auth.conf.example)."
+    echo "(see config/auth.conf.example)."
     echo "Leave blank to skip this step for now."
     echo
     local vault item
@@ -161,7 +161,7 @@ _auth_load_keychain() {
     local resolved_ssh
     resolved_ssh="$(command -v ssh)"
     if [[ "$resolved_ssh" != "/usr/bin/ssh" ]]; then
-        log_warn "ssh resolves to ${resolved_ssh}, not /usr/bin/ssh — Homebrew's openssh may be linked ahead of it on PATH. UseKeychain only works with Apple's ssh. Run 'brew unlink openssh' (the Brewfile's 'link: false' should already prevent this — see docs/ssh-setup-plan.md Phase 3)."
+        log_warn "ssh resolves to ${resolved_ssh}, not /usr/bin/ssh — Homebrew's openssh may be linked ahead of it on PATH. UseKeychain only works with Apple's ssh. Run 'brew unlink openssh' (the Brewfile's 'link: false' should already prevent this)."
     fi
 
     log_info "Loading SSH key into Keychain-backed ssh-agent (may prompt for the key's passphrase once)..."

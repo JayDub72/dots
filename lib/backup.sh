@@ -1,4 +1,4 @@
-# lib/backup.sh — one-way push, local -> NAS. See docs/planning.md step 6a.
+# lib/backup.sh — one-way push, local -> NAS.
 #
 # Meant to be run on a schedule via launchd (see launchd/), not manually
 # day-to-day. NOT safe to run before you've restored onto a fresh Mac —
@@ -13,9 +13,8 @@ readonly RSYNC_MAX_DELETE_EXIT=25   # verified empirically against this Mac's rs
 # Written after every run (success or failure) so two independent things can
 # know the outcome without watching the log: a macOS notification fires
 # immediately on failure, and dotfiles/.zshrc reads this file on every new
-# shell to keep warning you until a subsequent run actually succeeds — see
-# docs/planning.md step 6a. Not gitignored specially; it lives under logs/,
-# already excluded wholesale.
+# shell to keep warning you until a subsequent run actually succeeds. Not
+# gitignored specially; it lives under logs/, already excluded wholesale.
 readonly BACKUP_STATUS_FILE="${DOTS_ROOT}/logs/backup_status"
 
 _backup_notify_failure() {
@@ -33,9 +32,9 @@ _backup_notify_failure() {
 # --seed bypasses the "has this machine ever run dots restore" check
 # below — for the one legitimate case where backing up without a prior
 # restore is correct: the very first machine ever, seeding an empty NAS
-# with real local data for the first time (see docs/planning.md — this
-# already happened once, for real, 20.86GB, zero errors). Like --force,
-# meant to be typed by hand once, never automated.
+# with real local data for the first time (this already happened once,
+# for real, 20.86GB, zero errors). Like --force, meant to be typed by
+# hand once, never automated.
 #
 # Real near-miss 2026-09-19: dots backup ran on a machine that had never
 # been restored — local Documents was near-empty, would have pruned real
@@ -62,7 +61,7 @@ cmd_backup() {
     : "${BACKUP_MAX_DELETE:?BACKUP_MAX_DELETE must be set in config/backup.conf — see config/backup.conf.example for why, and do not set it to 0}"
 
     if ! nas_is_reachable; then
-        log_warn "NAS (${NAS_HOST}) not reachable — skipping this backup run. (Off-LAN handling is still an open decision; see docs/planning.md step 6c and nas_is_reachable() in lib/nas.sh.)"
+        log_warn "NAS (${NAS_HOST}) not reachable — skipping this backup run. (Off-LAN behavior is a silent skip by design; see nas_is_reachable() in lib/nas.sh.)"
         return 2
     fi
 

@@ -1,8 +1,8 @@
-# lib/restore.sh — mirror-image pull, NAS -> local. See docs/planning.md
-# step 6b. The last step of `dots all` — but always interactive (this can
-# take a long time, and always overwrites local with the NAS's copy), so
-# declining it doesn't fail the run: it's a deliberate skip, and the exact
-# command to run it later gets printed instead.
+# lib/restore.sh — mirror-image pull, NAS -> local. The last step of
+# `dots all` — but always interactive (this can take a long time, and
+# always overwrites local with the NAS's copy), so declining it doesn't
+# fail the run: it's a deliberate skip, and the exact command to run it
+# later gets printed instead.
 #
 # Writes RESTORE_STATUS_FILE (defined in lib/nas.sh) on success — this is
 # the thing lib/backup.sh checks before it will run at all. Real near-miss

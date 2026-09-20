@@ -21,10 +21,10 @@ dotfiles/.ssh/id_*
 logs/
 
 # Old pre-rebuild content — kept locally, not meant to be tracked going
-# forward (see docs/planning.md, "Decisions locked")
+# forward (locked decision — see CLAUDE.md)
 _archive/
 
-# Scratch space for Tart/UTM VM testing (docs/tart.md) — diagnostic logs,
+# Scratch space for VM testing (UTM, previously Tart) — diagnostic logs,
 # samples, etc. shared between host and guest via a directory mount.
 # Never meant to be tracked.
 testing/

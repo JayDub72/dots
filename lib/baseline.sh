@@ -1,15 +1,14 @@
 # lib/baseline.sh — "baseline" and "rollback" for environment settings only.
-# See docs/planning.md outcomes #2/#3b: macOS settings (lib/macos-defaults.sh)
-# are static and NOT part of this cycle — only dotfiles/ is.
+# macOS settings (lib/macos-defaults.sh) are static and NOT part of this
+# cycle — only dotfiles/ is.
 #
-# Requires this repo to actually be a git repository. Per docs/planning.md's
-# locked decisions, `dots` isn't one yet on purpose ("no rush to git init
-# just to have one") — so this module works mechanically but will refuse to
-# run until that happens. That's a real dependency to resolve, not a bug.
+# Requires this repo to actually be a git repository (it is, in the normal
+# case — jaydub72/dots on GitHub). This guard exists for the edge case of
+# running against a copy of the files with no .git present.
 
 _require_git_repo() {
     git -C "$DOTS_ROOT" rev-parse --git-dir &>/dev/null || {
-        log_error "dots isn't a git repository yet — baseline/rollback needs git. See docs/planning.md."
+        log_error "dots isn't a git repository here — baseline/rollback needs git."
         return 1
     }
 }
