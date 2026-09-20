@@ -93,8 +93,22 @@ EOF
 # off-LAN skip. Found live 2026-09-19: ping succeeded but this reported
 # "not reachable" with zero diagnostic detail available anywhere.
 nas_is_reachable() {
+    _nas_trust_host_key
     ssh -o BatchMode=yes -o ConnectTimeout=5 -p "${NAS_SSH_PORT:-22}" \
         "${NAS_USER}@${NAS_HOST}" true 2>>"$LOG_FILE"
+}
+
+# BatchMode=yes refuses to interactively prompt to trust a new host's key
+# (by design — no prompts during an automated check), so a machine's
+# *first ever* connection to the NAS fails with "Host key verification
+# failed" even though nothing is actually wrong — found live 2026-09-19,
+# right after the 2>/dev/null fix above finally surfaced the real reason.
+# ssh-keyscan fetches the host's public key non-interactively (no auth,
+# no prompt) so it's trusted before the real connection is attempted.
+# Safe to call every time — appending an already-known key is harmless.
+_nas_trust_host_key() {
+    mkdir -p "${HOME}/.ssh"
+    ssh-keyscan -T 5 -p "${NAS_SSH_PORT:-22}" -H "$NAS_HOST" >>"${HOME}/.ssh/known_hosts" 2>>"$LOG_FILE"
 }
 
 # Populates the global array RSYNC_EXCLUDE_ARGS from RSYNC_EXCLUDES (set in
