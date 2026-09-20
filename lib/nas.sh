@@ -85,9 +85,16 @@ EOF
 # Returns 0 if the NAS is reachable right now, 1 otherwise. Callers should
 # treat 1 as "skip gracefully" (return 2, the run_step "skipped" code),
 # not as a hard failure — being off-network is expected, not exceptional.
+#
+# stderr goes to the log, not /dev/null — this check can fail for reasons
+# that have nothing to do with network reachability (wrong NAS_USER, the
+# key not authorized on the NAS yet, a host key mismatch, wrong port), and
+# discarding the reason made every one of those look identical to a benign
+# off-LAN skip. Found live 2026-09-19: ping succeeded but this reported
+# "not reachable" with zero diagnostic detail available anywhere.
 nas_is_reachable() {
     ssh -o BatchMode=yes -o ConnectTimeout=5 -p "${NAS_SSH_PORT:-22}" \
-        "${NAS_USER}@${NAS_HOST}" true 2>/dev/null
+        "${NAS_USER}@${NAS_HOST}" true 2>>"$LOG_FILE"
 }
 
 # Populates the global array RSYNC_EXCLUDE_ARGS from RSYNC_EXCLUDES (set in
