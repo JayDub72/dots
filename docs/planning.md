@@ -771,3 +771,16 @@ re-deriving this.
   of virtualization. Not investigated further yet.
 - Tart's stall itself (see above) — unexplained, not blocking since UTM
   works, but a real open question if Tart is ever wanted again.
+
+## `dots auth`/`dots backup`/`dots restore` now prompt to create their config (2026-09-19)
+
+Same test run also surfaced that `auth`/`restore` just errored out with
+"copy the .example and fill it in" for `config/auth.conf`/`config/
+backup.conf` — correct (those are gitignored, genuinely don't exist on
+a fresh machine) but not great UX for a from-scratch bootstrap. Now
+`nas_load_config`/`_auth_load_config` prompt interactively for the
+machine-specific values (1Password vault/item; NAS host/user/port/
+share/`BACKUP_MAX_DELETE`) and write the real config file when it's
+missing, instead of just failing. Empty input skips gracefully (matches
+`run_step`'s existing SKIPPED convention); partial input is a real
+error, won't write a half-filled config. See `lib/auth.sh`/`lib/nas.sh`.
