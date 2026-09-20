@@ -180,7 +180,17 @@ _auth_verify_github() {
             || { log_error "gh ssh-key add failed — see ${LOG_FILE}."; return 1; }
     fi
 
-    if ssh -T git@github.com 2>&1 | tee -a "$LOG_FILE" | grep -qi "successfully authenticated"; then
+    # Captured into a variable rather than piped straight into grep — bin/dots
+    # runs with `set -o pipefail`, and `ssh -T git@github.com` always exits 1
+    # even on real success (GitHub's shell-access-denied design). Under
+    # pipefail that nonzero exit overrides the whole pipeline's status
+    # regardless of what grep finds downstream, so a genuine success was
+    # being reported as a failure (found live 2026-09-19 — the log showed
+    # "You've successfully authenticated" immediately above the FAIL line).
+    local github_output
+    github_output="$(ssh -T git@github.com 2>&1)"
+    echo "$github_output" >>"$LOG_FILE"
+    if grep -qi "successfully authenticated" <<<"$github_output"; then
         log_success "GitHub SSH auth verified."
     else
         log_error "ssh -T git@github.com did not report successful authentication — see ${LOG_FILE}."
