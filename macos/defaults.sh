@@ -93,9 +93,9 @@ macos_apply "defaults write com.google.Chrome DisablePrintPreview -bool true" \
 log_step "Dock"
 
 macos_apply "defaults write com.apple.dock orientation -string bottom" \
-    "Move dock to the left side of the screen"
+    "Move dock to the bottom of the screen"
 
-macos_apply "defaults write com.apple.dock autohide -bool true" \
+macos_apply "defaults write com.apple.dock autohide -bool false" \
     "Automatically hide/show the Dock"
 
 macos_apply "defaults write com.apple.dock autohide-delay -float 0" \
@@ -162,6 +162,9 @@ macos_apply "defaults write com.apple.dock wvous-br-corner -int 5" \
 macos_apply "/opt/homebrew/bin/dockutil -r all" \
     "Clear Dock icons"
 
+macos_apply "/opt/homebrew/bin/dockutil --add /System/Applications/Apps.app/" \
+    "Add Apps to the Dock"
+
 macos_apply "/opt/homebrew/bin/dockutil --add /Applications/Safari.app/" \
     "Add Safari to the Dock"
 
@@ -174,8 +177,8 @@ macos_apply "/opt/homebrew/bin/dockutil --add /Applications/Ghostty.app/" \
 macos_apply "/opt/homebrew/bin/dockutil --add /System/Applications/Messages.app/" \
     "Add Messages to the Dock"
 
-macos_apply "/opt/homebrew/bin/dockutil --add /Applications/Notion.app/" \
-    "Add Notion to the Dock"
+macos_apply "/opt/homebrew/bin/dockutil --add /Applications/Discord.app/" \
+    "Add Discord to the Dock"
 
 macos_apply "/opt/homebrew/bin/dockutil --add /Applications/Obsidian.app/" \
     "Add Obsidian to the Dock"
@@ -185,12 +188,6 @@ macos_apply "/opt/homebrew/bin/dockutil --add /Applications/Spotify.app/" \
 
 macos_apply "/opt/homebrew/bin/dockutil --add '/Applications/Visual Studio Code.app/'" \
     "Add VS Code to the Dock"
-
-macos_apply "/opt/homebrew/bin/dockutil --add /Applications --view grid --display folder --sort name --section others --allhomes" \
-    "Add Applications to the Dock"
-
-macos_apply "/opt/homebrew/bin/dockutil --add ~/Documents --view list --display folder --sort name --section others --allhomes" \
-    "Add Documents to the Dock"
 
 macos_apply "/opt/homebrew/bin/dockutil --add ~/Downloads --view list --display folder --sort name --section others --allhomes" \
     "Add Downloads to the Dock"
