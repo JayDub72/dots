@@ -74,8 +74,17 @@ EOF
 # only checks and gives instructions — it doesn't attempt to automate sign-in.
 _auth_check_1password() {
     command -v op &>/dev/null || { log_error "1Password CLI (op) not found — run 'dots apps' first."; return 1; }
-    if ! op account list &>/dev/null; then
-        log_error "1Password CLI isn't signed in. Open the 1Password app, sign into your account, then enable Settings -> Developer -> 'Integrate with 1Password CLI'. Re-run 'dots auth' once that's done."
+
+    # Do NOT redirect op's output here. On a never-configured `op`, this
+    # command itself prompts interactively ("add an account manually?") —
+    # found live 2026-09-19. A redirect would hide that prompt entirely
+    # while `op` sits there waiting for input nobody can see is needed,
+    # the exact same silent-hang bug class as the microsoft-office sudo
+    # prompt earlier this session. Letting it print directly means the
+    # prompt is visible and answerable; log_info below just frames it.
+    log_info "Checking 1Password CLI sign-in (this may prompt you directly — answer it if so)..."
+    if ! op account list; then
+        log_error "1Password CLI isn't signed in. Open the 1Password app, sign into your account, then enable Settings -> Developer -> 'Integrate with 1Password CLI' (preferred — no separate CLI sign-in to manage), or sign in directly via the CLI if you just saw a prompt for that. Re-run 'dots auth' once that's done."
         return 1
     fi
     log_success "1Password CLI is signed in."
@@ -96,8 +105,15 @@ _auth_restore_ssh_key() {
     # can't read at all (verified 2026-09-19: silently produces a file
     # ssh-keygen calls "not a key file"). --file-mode 600 writes it with
     # correct permissions atomically, no separate chmod needed.
+    # No stderr redirect here — if op isn't fully signed in yet it can
+    # prompt interactively (sign-in address, etc.), and a redirect would
+    # hide that prompt entirely while op sits waiting for input nobody
+    # can see is needed (found live 2026-09-19: the exact same bug as
+    # _auth_check_1password, just in this function). --out-file already
+    # keeps the actual key material out of stdout/stderr either way, so
+    # nothing sensitive is exposed by leaving this unredirected.
     local ref="op://${OP_SSH_KEY_VAULT}/${OP_SSH_KEY_ITEM}/private key?ssh-format=openssh"
-    if ! op read --out-file "$SSH_KEY_PATH" --file-mode 600 -f "$ref" 2>>"$LOG_FILE"; then
+    if ! op read --out-file "$SSH_KEY_PATH" --file-mode 600 -f "$ref"; then
         rm -f "$SSH_KEY_PATH"
         log_error "Could not read '${ref}' from 1Password. Confirm OP_SSH_KEY_VAULT/OP_SSH_KEY_ITEM in config/auth.conf — note OP_SSH_KEY_VAULT must be the vault's ID, not its name, if the name has characters like '&' that op:// references can't parse (see config/auth.conf.example)."
         return 1
@@ -124,7 +140,9 @@ _auth_load_keychain() {
     fi
 
     log_info "Loading SSH key into Keychain-backed ssh-agent (may prompt for the key's passphrase once)..."
-    if ssh-add --apple-use-keychain "$SSH_KEY_PATH" 2>>"$LOG_FILE"; then
+    # No stderr redirect — same reasoning as _auth_restore_ssh_key above:
+    # a hidden passphrase prompt is a silent hang, not a clean failure.
+    if ssh-add --apple-use-keychain "$SSH_KEY_PATH"; then
         log_success "Key loaded and stored in Keychain."
     else
         log_error "ssh-add --apple-use-keychain failed — see ${LOG_FILE}."
