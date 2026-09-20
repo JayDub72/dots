@@ -5,7 +5,9 @@
 # command to run it later gets printed instead.
 
 cmd_restore() {
-    nas_load_config || return 1
+    nas_load_config
+    local nas_config_rc=$?
+    [[ "$nas_config_rc" -eq 0 ]] || return "$nas_config_rc"
 
     if ! nas_is_reachable; then
         log_error "NAS (${NAS_HOST}) not reachable — cannot restore right now."

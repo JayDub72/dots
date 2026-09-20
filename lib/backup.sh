@@ -33,7 +33,9 @@ cmd_backup() {
     local force=false
     [[ "${1:-}" == "--force" ]] && force=true
 
-    nas_load_config || return 1
+    nas_load_config
+    local nas_config_rc=$?
+    [[ "$nas_config_rc" -eq 0 ]] || return "$nas_config_rc"
     : "${BACKUP_MAX_DELETE:?BACKUP_MAX_DELETE must be set in config/backup.conf — see config/backup.conf.example for why, and do not set it to 0}"
 
     if ! nas_is_reachable; then

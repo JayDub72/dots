@@ -21,13 +21,50 @@ readonly SSH_KEY_PATH="${HOME}/.ssh/id_ed25519"
 
 _auth_load_config() {
     if [[ ! -f "$AUTH_CONFIG_FILE" ]]; then
-        log_error "No config/auth.conf found. Copy config/auth.conf.example to config/auth.conf and fill it in."
-        return 1
+        _auth_create_config
+        case $? in
+            0) ;;
+            2) return 2 ;;
+            *) return 1 ;;
+        esac
     fi
     # shellcheck source=/dev/null
     source "$AUTH_CONFIG_FILE"
     : "${OP_SSH_KEY_VAULT:?OP_SSH_KEY_VAULT must be set in config/auth.conf}"
     : "${OP_SSH_KEY_ITEM:?OP_SSH_KEY_ITEM must be set in config/auth.conf — see config/auth.conf.example}"
+}
+
+# Interactively creates config/auth.conf. Only the values in
+# config/auth.conf.example that are actually machine-specific and can't
+# be sensibly defaulted — see that file for the full explanation of what
+# these are and why. Empty vault input = skip this step entirely (return
+# 2, not a failure) rather than force a decision right now.
+_auth_create_config() {
+    log_warn "No config/auth.conf found — let's create it now."
+    echo
+    echo "This is the 1Password vault + item holding your shared SSH key"
+    echo "(see docs/ssh-setup-plan.md Phase 6, and config/auth.conf.example)."
+    echo "Leave blank to skip this step for now."
+    echo
+    local vault item
+    read -r -p "1Password vault (ID or name — must be the ID if the name has characters like '&'; find via 'op vault list'): " vault
+    if [[ -z "$vault" ]]; then
+        log_info "Skipping — no config/auth.conf created. Run 'dots auth' again once you're ready."
+        return 2
+    fi
+    read -r -p "1Password item title for the SSH key: " item
+    if [[ -z "$item" ]]; then
+        log_error "An item title is required once a vault is given — not creating a half-filled config/auth.conf."
+        return 1
+    fi
+
+    cat > "$AUTH_CONFIG_FILE" <<EOF
+# config/auth.conf — created interactively by 'dots auth' on $(date '+%Y-%m-%d').
+# See config/auth.conf.example for the full explanation of these values.
+OP_SSH_KEY_VAULT="${vault}"
+OP_SSH_KEY_ITEM="${item}"
+EOF
+    log_success "Wrote ${AUTH_CONFIG_FILE}."
 }
 
 # 1Password CLI auth is the root of trust for everything else in this step.
@@ -144,7 +181,9 @@ _auth_verify_nas() {
 }
 
 cmd_auth() {
-    _auth_load_config || return 1
+    _auth_load_config
+    local rc=$?
+    [[ "$rc" -eq 0 ]] || return "$rc"
     _auth_check_1password || return 1
     _auth_restore_ssh_key || return 1
     _auth_load_keychain || return 1
