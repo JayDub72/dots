@@ -22,16 +22,39 @@ _backup_notify_failure() {
     osascript -e "display notification \"Check ${LOG_FILE} for details.\" with title \"dots backup failed\"" &>/dev/null || true
 }
 
-# cmd_backup [--force]
+# cmd_backup [--force] [--seed]
 #
 # --force bypasses BACKUP_MAX_DELETE for this one run — for a deliberate
 # local cleanup you actually want mirrored to the NAS. Never pass this
 # automatically or from a script; it's meant to be typed by hand, once,
 # by a person who just confirmed the deletion is intentional. The
 # scheduled launchd job only ever calls plain `dots backup`, no flags.
+#
+# --seed bypasses the "has this machine ever run dots restore" check
+# below — for the one legitimate case where backing up without a prior
+# restore is correct: the very first machine ever, seeding an empty NAS
+# with real local data for the first time (see docs/planning.md — this
+# already happened once, for real, 20.86GB, zero errors). Like --force,
+# meant to be typed by hand once, never automated.
+#
+# Real near-miss 2026-09-19: dots backup ran on a machine that had never
+# been restored — local Documents was near-empty, would have pruned real
+# NAS data to match it. BACKUP_MAX_DELETE caught it, but only as a
+# numeric backstop, not by actually preventing the wrong order — hence
+# the check below, not just relying on the delete count.
 cmd_backup() {
-    local force=false
-    [[ "${1:-}" == "--force" ]] && force=true
+    local force=false seed=false arg
+    for arg in "$@"; do
+        case "$arg" in
+            --force) force=true ;;
+            --seed) seed=true ;;
+        esac
+    done
+
+    if [[ ! -f "$RESTORE_STATUS_FILE" ]] && ! "$seed"; then
+        log_error "This machine has never completed 'dots restore' — refusing to run 'dots backup'. A backup here would treat local as truth and prune the NAS to match it; on a machine that's never been restored, local is likely near-empty, so this would delete real backed-up data. Run 'dots restore' first. If this is genuinely the first-ever seed backup (a brand-new source-of-truth machine, empty NAS, no prior restore possible), re-run as 'dots backup --seed' to confirm that and proceed anyway."
+        return 1
+    fi
 
     nas_load_config
     local nas_config_rc=$?

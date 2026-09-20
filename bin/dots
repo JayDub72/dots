@@ -97,7 +97,7 @@ case "$DOTS_COMMAND" in
     auth)        cmd_auth ;;
     baseline)    cmd_baseline ;;
     rollback)    cmd_rollback ;;
-    backup)      cmd_backup "${2:-}" ;;
+    backup)      cmd_backup "${@:2}" ;;
     restore)     cmd_restore ;;
     help|--help|-h) print_help ;;
     *) die "Unknown command: ${DOTS_COMMAND} (see 'dots help')" ;;

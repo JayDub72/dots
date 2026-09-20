@@ -3,6 +3,14 @@
 # take a long time, and always overwrites local with the NAS's copy), so
 # declining it doesn't fail the run: it's a deliberate skip, and the exact
 # command to run it later gets printed instead.
+#
+# Writes RESTORE_STATUS_FILE (defined in lib/nas.sh) on success — this is
+# the thing lib/backup.sh checks before it will run at all. Real near-miss
+# 2026-09-19: dots backup ran on a machine that had never been restored,
+# local Documents was near-empty, and BACKUP_MAX_DELETE only barely caught
+# it before real NAS data got pruned to match. A delete-count backstop
+# isn't the same as actually preventing the wrong order — this marker is
+# the structural fix.
 
 cmd_restore() {
     nas_load_config
@@ -40,6 +48,11 @@ cmd_restore() {
             failures=$((failures + 1))
         fi
     done
+
+    if [[ "$failures" -eq 0 ]]; then
+        mkdir -p "$(dirname "$RESTORE_STATUS_FILE")"
+        echo "OK $(date '+%Y-%m-%d %H:%M:%S')" > "$RESTORE_STATUS_FILE"
+    fi
 
     [[ "$failures" -eq 0 ]]
 }

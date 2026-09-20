@@ -9,6 +9,14 @@
 
 readonly NAS_CONFIG_FILE="${DOTS_ROOT}/config/backup.conf"
 
+# Written by lib/restore.sh on a successful restore; checked by
+# lib/backup.sh before it will run at all — see the comment on
+# cmd_backup() in lib/backup.sh for why. Defined here (shared
+# infrastructure both files already source) rather than in either file
+# directly, to avoid a sourcing-order dependency or a duplicate readonly
+# declaration.
+readonly RESTORE_STATUS_FILE="${DOTS_ROOT}/logs/restore_status"
+
 nas_load_config() {
     if [[ ! -f "$NAS_CONFIG_FILE" ]]; then
         _nas_create_config
