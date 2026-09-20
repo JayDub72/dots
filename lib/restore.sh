@@ -63,6 +63,10 @@ cmd_restore() {
     if [[ "$failures" -eq 0 ]]; then
         mkdir -p "$(dirname "$RESTORE_STATUS_FILE")"
         echo "OK $(date '+%Y-%m-%d %H:%M:%S')" > "$RESTORE_STATUS_FILE"
+        # dots backup isn't part of dots all's sequence at all (it's meant
+        # for scheduled/launchd use, or triggered by hand) — call out the
+        # natural next step explicitly rather than leave it undiscoverable.
+        log_info "Next, whenever you're ready: './bin/dots backup' — now safe, since local reflects the real data from this restore, not a near-empty fresh-machine state."
     fi
 
     [[ "$failures" -eq 0 ]]
