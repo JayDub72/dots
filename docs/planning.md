@@ -784,3 +784,89 @@ share/`BACKUP_MAX_DELETE`) and write the real config file when it's
 missing, instead of just failing. Empty input skips gracefully (matches
 `run_step`'s existing SKIPPED convention); partial input is a real
 error, won't write a half-filled config. See `lib/auth.sh`/`lib/nas.sh`.
+
+## More real bugs found live testing `dots auth`/NAS reachability (2026-09-19)
+
+Same session, continuing to actually run this on real hardware/VMs
+surfaced a cluster of real, previously-invisible bugs — the value of
+testing beats any amount of code review:
+
+- **`_auth_check_1password` accepted zero accounts as success.**
+  `op account list` exits 0 with empty output when nothing is actually
+  configured — the check only looked at exit code, so it passed
+  anyway, and the real problem only surfaced later, confusingly, at the
+  SSH key restore step. Fixed to check the output is non-empty too.
+- **Two more instances of the "redirect hides an interactive prompt"
+  bug** (same class as the `microsoft-office` sudo prompt earlier):
+  `op read` (SSH key restore) and `ssh-add --apple-use-keychain` both
+  had stderr redirected to the log file, hiding a possible sign-in
+  prompt. Fixed — third and likely final instance of this pattern,
+  audited the rest of the codebase and found no more.
+- **`pipefail` broke GitHub SSH verification.** `ssh -T git@github.com`
+  always exits 1 even on genuine success (GitHub's "no shell access"
+  design) — piping it into `grep` worked by hand, but under `bin/dots`'s
+  `set -o pipefail`, the pipeline's exit status tracked ssh's nonzero
+  code regardless of what grep matched. A real "successfully
+  authenticated" was reported as a failure every time. Fixed by
+  capturing output into a variable before grepping it, sidestepping
+  pipefail entirely. Reproduced the bug standalone before and after the
+  fix to confirm.
+- **NAS reachability check discarded all diagnostic output.**
+  `2>/dev/null` on the SSH probe meant every failure reason — auth,
+  wrong port, host key mismatch — looked identical to a benign off-LAN
+  skip. Changed to log instead of discard.
+- **Real near-miss: host key auto-trust.** Once the discarded-output fix
+  surfaced the actual error ("Host key verification failed" — a fresh
+  machine's first-ever NAS connection, expected), the first fix attempt
+  had `nas_is_reachable()` run `ssh-keyscan` and silently trust whatever
+  key came back, no verification at all. That's a real security
+  regression — it defeats host key checking's actual purpose (MITM
+  protection) — caught immediately, not shipped-and-forgotten. Reverted
+  same session. Correct fix: detect that specific failure and tell the
+  user to connect manually once and verify the fingerprint themselves —
+  same human-verified-trust pattern as 1Password sign-in, `gh auth
+  login`, and sudo elsewhere in this codebase. Worth remembering: don't
+  auto-accept trust decisions on the user's behalf, even for
+  low-stakes-seeming infrastructure like a home NAS.
+
+## Real near-miss: dots backup ran before dots restore on a fresh machine (2026-09-19)
+
+The actual incident, not just a bug found: once the NAS host key was
+manually trusted (per the fix above) and `nas_is_reachable()` started
+reporting true, `dots backup` ran on this fresh VM — which had never
+run `dots restore` — before restore had happened. Local `Documents` was
+near-empty compared to what's actually on the NAS. `dots backup` is a
+one-way push with `rsync --delete`: local is treated as truth, so this
+started pruning real NAS data to match the near-empty local folder.
+
+**`BACKUP_MAX_DELETE` caught it — the run aborted, not completed.** No
+data was actually lost. But this was too close: a numeric backstop
+catching a mistake after the fact isn't the same as the mistake being
+structurally impossible, and depending on how many files it takes to
+exceed the configured limit, a bounded amount of real deletion can
+still happen before the abort fires.
+
+**Structural fix, not just a bigger safety margin:** `dots restore` now
+writes a marker file (`RESTORE_STATUS_FILE`, `logs/restore_status`) on
+success. `dots backup` refuses to run *at all* if that marker doesn't
+exist — not a warning, a hard stop — with a clear explanation and
+pointer to run `dots restore` first. One legitimate exception: the very
+first machine ever, seeding a genuinely empty NAS (this happened for
+real once already — see "Scaffolding built" above, 20.86GB, zero
+errors) — `dots backup --seed` exists for exactly that, explicit and
+typed by hand, same pattern as the existing `--force` flag (which stays
+separate — different risk, bypasses the delete-count limit specifically,
+not the restore-first requirement).
+
+Verified all paths (refuses without marker or `--seed`, proceeds with
+either, marker only written on actual restore success not failure) in
+isolated sandbox tests before touching real command dispatch — same
+discipline as every other fix tonight, but especially warranted here
+given what was actually at stake.
+
+**Lesson for future sessions:** the existing `BACKUP_MAX_DELETE` comment
+already said "the technical backstop for getting that order wrong, not
+a substitute for it" — that was written in good faith but not actually
+enforced anywhere until a real near-miss forced the issue. When a
+comment describes a safety property, check whether the code actually
+guarantees it or just hopes for it.
