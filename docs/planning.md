@@ -669,3 +669,105 @@ credentials anywhere), and plenty of public dotfiles repos carry this
 level of detail — but it's a real, deliberate tradeoff, not an oversight.
 If this ever needs revisiting, `git log` has full history of what
 changed and when.
+
+## `tart` installed, added to Brewfile (2026-09-19)
+
+Starting the Tart VM testing task. Installing `cirruslabs/cli/tart` hit
+two real, currently-live upstream bugs — not anything in `dots`:
+
+1. Both `tart.rb` and its `softnet.rb` dependency (in the
+   `cirruslabs/homebrew-cli` tap) use deprecated Homebrew DSL
+   (`depends_on :macos => :version`, hash-rocket form) that current
+   Homebrew refuses to load at all ("Calling `depends_on :macos` with
+   `depends_on macos:` is disabled"). Confirmed live on GitHub
+   (`master` branch, not a stale local tap) — genuinely unfixed
+   upstream as of this writing. Worked around by deleting the offending
+   line from both locally cached formula files. This is **not**
+   persistent — a fresh `brew tap cirruslabs/cli` on another machine
+   (or after this tap updates) pulls the same broken files and hits the
+   same failure until upstream actually fixes it.
+2. Separately, this Homebrew version now requires `brew trust <tap>`
+   before installing from an unfamiliar tap for the first time —
+   `brew bundle` will fail on the `tart` line on a truly fresh machine
+   until `brew trust cirruslabs/cli` has been run once, manually.
+
+Both are documented inline in the Brewfile's Taps section so they're not
+a surprise later. Added `brew "cirruslabs/cli/tart"` to the Brewfile per
+explicit request, in its own section marked as a host-only testing tool
+(not something every rebuilt Mac inherently needs — it's for testing
+`dots` itself, see `docs/tart.md`). Verified: `tart --version` -> 2.32.1,
+`brew bundle check` parses the updated Brewfile with no errors on the
+new lines.
+
+**Still open:** no base VM image created yet (`tart create
+--from-ipsw=latest dots-base`) — that's the next real step, and it's
+slow (downloads and runs a real macOS installer).
+
+## First real `dots all` test run — long chase, small root cause (2026-09-19)
+
+Built `dots-base`, ran `./bin/dots all` for real for the first time via
+the curl+tar Quick Start inside it. Result: a multi-hour apparent hang
+during `dots apps` (`brew bundle`) that took most of a session to
+diagnose, chasing — in order — vscode entries, stdin/interactive
+prompts, stale Homebrew lock files, disk space, VM-instance corruption,
+a fresh `dots-base` rebuild, a network/MTU blackhole theory (wrongly
+"confirmed" against the host — my error, corrected below), and finally
+UTM as a second virtualization tool to compare against. Full blow-by-blow
+not reproduced here; the two things worth keeping:
+
+**Root cause, once found, was mundane:** `brew bundle` hit a normal,
+expected `sudo` password prompt for the `microsoft-office` cask's
+installer (`macOS`, via `/usr/sbin/installer`, genuinely needs root).
+Nobody was watching the terminal at that exact moment, and with
+`lib/apps.sh`'s output fully redirected to the log file (the earlier
+"quiet the noise" fix), there was nothing else on screen to distinguish
+"waiting on you" from "working quietly" — so it looked identical to a
+genuine hang for hours. Confirmed in the log: `"Running installer for
+microsoft-office with sudo (which may request your password)..."`
+immediately followed by the actual stall point.
+
+**Important: this does NOT explain Tart's stall specifically.** Real
+mistake made and corrected mid-session: after UTM's sudo-prompt
+explanation resolved things, I initially claimed this was *also* what
+had been happening in Tart — but the evidence doesn't support that.
+`ps aux` during the Tart stall never showed a `sudo`/`installer` process
+waiting, only the `ruby brew.rb bundle` process itself, and a `sample`
+stack trace showed *ruby's own* thread blocked in a low-level `read()`
+call (`io_fread` → `rb_thread_io_blocking_call` → `read`), not a
+separate process waiting on terminal input. Tart's repeated stall
+(reproduced on a fresh `dots-base` rebuild too, ruling out
+instance-specific corruption) remains **genuinely unexplained**. Not
+pursued further since UTM works as an alternative — noted here so a
+future session doesn't assume it's "just the same sudo thing" without
+re-deriving this.
+
+**Real bugs found and fixed from this run, unrelated to the VM mystery:**
+- `macos/defaults.sh`'s VS Code dockutil line had an unquoted path with
+  a space (`/Applications/Visual Studio Code.app/`) — `macos_apply`'s
+  `eval` word-split it into three separate arguments, so `dockutil`
+  received a stray `Studio` argument and failed with "does not seem to
+  be a home directory or a dock plist." Fixed by quoting the path.
+  Verified via the same `eval "set -- $cmd"` + arg-count trick used
+  elsewhere in this doc's history.
+- `ebullient/tap` (TTRPG) hit the same untrusted-tap gate as
+  `cirruslabs/cli` did earlier, but was never resolved for it — hard-fails
+  a fresh `dots apps` run with "Refusing to load formula ... from
+  untrusted tap." Since its own comment already said "not currently
+  planned for use," removed both `tap "ebullient/tap"` and
+  `brew "ttrpg-convert-cli"` from the Brewfile entirely (your call, not
+  documented-and-kept like cirruslabs) rather than requiring a
+  `brew trust` step for something unused.
+- `testing/` (the Tart/UTM shared-folder scratch space used for passing
+  diagnostic files back and forth this session — `samples.txt`, log
+  files) added to `.gitignore` — was showing up untracked, never meant
+  to be committed.
+
+**Still unresolved, real, and worth a decision later:**
+- `microsoft-office`'s cask install itself fails consistently (both Tart
+  and UTM, both times tried) — `/usr/sbin/installer` exits 1 with only
+  `"installer: The install failed.."`, no more detail available from
+  this log. Could be VM-specific (Office's installer may check for
+  something a VM doesn't have) or a genuine installer issue independent
+  of virtualization. Not investigated further yet.
+- Tart's stall itself (see above) — unexplained, not blocking since UTM
+  works, but a real open question if Tart is ever wanted again.

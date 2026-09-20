@@ -183,7 +183,7 @@ macos_apply "/opt/homebrew/bin/dockutil --add /Applications/Obsidian.app/" \
 macos_apply "/opt/homebrew/bin/dockutil --add /Applications/Spotify.app/" \
     "Add Spotify to the Dock"
 
-macos_apply "/opt/homebrew/bin/dockutil --add /Applications/Visual Studio Code.app/" \
+macos_apply "/opt/homebrew/bin/dockutil --add '/Applications/Visual Studio Code.app/'" \
     "Add VS Code to the Dock"
 
 macos_apply "/opt/homebrew/bin/dockutil --add /Applications --view grid --display folder --sort name --section others --allhomes" \

@@ -23,3 +23,8 @@ logs/
 # Old pre-rebuild content — kept locally, not meant to be tracked going
 # forward (see docs/planning.md, "Decisions locked")
 _archive/
+
+# Scratch space for Tart/UTM VM testing (docs/tart.md) — diagnostic logs,
+# samples, etc. shared between host and guest via a directory mount.
+# Never meant to be tracked.
+testing/
