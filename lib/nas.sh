@@ -93,22 +93,27 @@ EOF
 # off-LAN skip. Found live 2026-09-19: ping succeeded but this reported
 # "not reachable" with zero diagnostic detail available anywhere.
 nas_is_reachable() {
-    _nas_trust_host_key
-    ssh -o BatchMode=yes -o ConnectTimeout=5 -p "${NAS_SSH_PORT:-22}" \
-        "${NAS_USER}@${NAS_HOST}" true 2>>"$LOG_FILE"
-}
+    local ssh_output rc
+    ssh_output="$(ssh -o BatchMode=yes -o ConnectTimeout=5 -p "${NAS_SSH_PORT:-22}" \
+        "${NAS_USER}@${NAS_HOST}" true 2>&1)"
+    rc=$?
+    echo "$ssh_output" >>"$LOG_FILE"
 
-# BatchMode=yes refuses to interactively prompt to trust a new host's key
-# (by design — no prompts during an automated check), so a machine's
-# *first ever* connection to the NAS fails with "Host key verification
-# failed" even though nothing is actually wrong — found live 2026-09-19,
-# right after the 2>/dev/null fix above finally surfaced the real reason.
-# ssh-keyscan fetches the host's public key non-interactively (no auth,
-# no prompt) so it's trusted before the real connection is attempted.
-# Safe to call every time — appending an already-known key is harmless.
-_nas_trust_host_key() {
-    mkdir -p "${HOME}/.ssh"
-    ssh-keyscan -T 5 -p "${NAS_SSH_PORT:-22}" -H "$NAS_HOST" >>"${HOME}/.ssh/known_hosts" 2>>"$LOG_FILE"
+    # BatchMode=yes refuses to interactively prompt to trust a new host's
+    # key (by design — no prompts during this automated check), so a
+    # machine's *first ever* connection to the NAS fails with "Host key
+    # verification failed" even though nothing is actually wrong. Found
+    # live 2026-09-19. Deliberately NOT auto-trusted — a first attempt at
+    # that (ssh-keyscan, no verification) was a real security regression,
+    # silently defeating the entire point of host key checking (MITM
+    # protection), caught before it landed. Trusting a new host is a
+    # one-time, human-verified action, same as every other trust-
+    # establishing step in this codebase (1Password sign-in, gh auth
+    # login, sudo) — not something dots does on your behalf.
+    if [[ "$rc" -ne 0 ]] && grep -qi "host key verification failed" <<<"$ssh_output"; then
+        log_warn "NAS host key isn't trusted yet on this machine — a one-time thing per machine, not something dots does automatically. Run 'ssh -p ${NAS_SSH_PORT:-22} ${NAS_USER}@${NAS_HOST}' yourself, check the fingerprint it shows against what you expect, and type 'yes' to accept it. Then re-run this."
+    fi
+    return "$rc"
 }
 
 # Populates the global array RSYNC_EXCLUDE_ARGS from RSYNC_EXCLUDES (set in
