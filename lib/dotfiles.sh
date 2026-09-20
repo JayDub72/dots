@@ -13,6 +13,7 @@ readonly DOTFILE_NAMES=(
     ".profile"
     ".p10k.zsh"
     ".vimrc"
+    ".config/ghostty/config"
     "Library/Application Support/Code/User/settings.json"
 )
 
