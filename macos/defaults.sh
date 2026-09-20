@@ -302,10 +302,10 @@ macos_apply "defaults write -g AppleKeyboardUIMode -int 3" \
 macos_apply "defaults write -g ApplePressAndHoldEnabled -bool false" \
     "Disable press-and-hold in favor of key repeat"
 
-macos_apply "defaults write -g 'InitialKeyRepeat_Level_Saved' -int 10" \
+macos_apply "defaults write -g 'InitialKeyRepeat_Level_Saved' -int 30" \
     "Set delay until repeat"
 
-macos_apply "defaults write -g KeyRepeat -int 1" \
+macos_apply "defaults write -g KeyRepeat -int 0.08" \
     "Set the key repeat rate to fast"
 
 macos_apply "defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false" \
@@ -323,8 +323,8 @@ macos_apply "defaults write -g NSAutomaticDashSubstitutionEnabled -bool false" \
 macos_apply "defaults write -g NSAutomaticQuoteSubstitutionEnabled -bool false" \
     "Disable smart quotes"
 
-macos_apply "defaults write com.apple.HIToolbox AppleFnUsageType -int 2" \
-    "Remap the emoji picker to the Fn key"
+# macos_apply "defaults write com.apple.HIToolbox AppleFnUsageType -int 2" \
+#    "Remap the emoji picker to the Fn key"
 
 # -----------------------------------------------------------------------------
 # Language and Region
@@ -505,8 +505,8 @@ macos_apply "sudo defaults write /Library/Preferences/com.apple.loginwindow Gues
 macos_apply "defaults write com.apple.screencapture disable-shadow -bool true" \
     "Disable shadow in screenshots"
 
-macos_apply "defaults write com.apple.screencapture location -string '$HOME/Desktop'" \
-    "Save screenshots to the Desktop"
+macos_apply "defaults write com.apple.screencapture location -string '$HOME/Pictures/Screenshots'" \
+    "Save screenshots to the Screenshots folder"
 
 macos_apply "defaults write com.apple.screencapture show-thumbnail -bool false" \
     "Do not show screenshot thumbnails"
