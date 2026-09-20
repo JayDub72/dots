@@ -90,8 +90,14 @@ _auth_check_1password() {
     local accounts
     accounts="$(op account list)"
     if [[ $? -ne 0 || -z "$accounts" ]]; then
-        log_error "1Password CLI isn't signed in to any account. Open the 1Password app, sign into your account, then enable Settings -> Developer -> 'Integrate with 1Password CLI' (preferred — no separate CLI sign-in to manage), or sign in directly via the CLI if you just saw a prompt for that. Re-run 'dots auth' once that's done."
-        return 1
+        # This is an expected state on a fresh machine, not a failure —
+        # 1Password sign-in is a genuinely manual, human-verified step
+        # (see the header comment at the top of this file) that nothing
+        # here can script past. Skipping (return 2) rather than failing
+        # (return 1) so it shows as a clean next-step in the run summary,
+        # not noise from running a step known in advance not to work yet.
+        log_warn "1Password CLI isn't signed in to any account yet — this is expected on a machine that's never had it set up. NEXT STEP: open the 1Password app, sign into your account, then enable Settings -> Developer -> 'Integrate with 1Password CLI' (preferred — no separate CLI sign-in to manage), or sign in directly via the CLI. Then re-run 'dots auth'."
+        return 2
     fi
     log_success "1Password CLI is signed in."
 }
@@ -218,7 +224,9 @@ cmd_auth() {
     _auth_load_config
     local rc=$?
     [[ "$rc" -eq 0 ]] || return "$rc"
-    _auth_check_1password || return 1
+    _auth_check_1password
+    rc=$?
+    [[ "$rc" -eq 0 ]] || return "$rc"
     _auth_restore_ssh_key || return 1
     _auth_load_keychain || return 1
     _auth_verify_github || return 1

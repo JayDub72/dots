@@ -13,6 +13,17 @@
 # the structural fix.
 
 cmd_restore() {
+    # SSH_KEY_PATH is defined in lib/auth.sh (sourced before this file).
+    # Without the shared key restored, nas_is_reachable()'s SSH attempt
+    # would just fail with a confusing auth error — check for the actual
+    # cause first and point at the real next step (dots auth) instead.
+    # Same reasoning as _auth_check_1password's skip-not-fail: this is
+    # expected on a machine that hasn't run dots auth yet, not a failure.
+    if [[ ! -f "$SSH_KEY_PATH" ]]; then
+        log_warn "No SSH key at ${SSH_KEY_PATH} yet — this is expected before 'dots auth' has run. NEXT STEP: run 'dots auth' first (which itself needs 1Password signed in — see its own message if that's not done yet), then re-run 'dots restore'."
+        return 2
+    fi
+
     nas_load_config
     local nas_config_rc=$?
     [[ "$nas_config_rc" -eq 0 ]] || return "$nas_config_rc"
