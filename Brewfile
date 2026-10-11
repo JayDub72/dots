@@ -58,6 +58,8 @@ brew "dockutil"  # Tool for managing dock items
 brew "duti"  # Select default apps for documents and URL schemes on macOS
 brew "mas"  # macOS software installation
 brew "mole"  # mac cleanup utility
+tap "nikgrbn/tap"
+brew "finder-menu"  # Adds useful actions to Finder's right-click menu
 
 # --- Media: Video, Image & Audio Processing --------------------------------
 brew "aom"  # Codec library for encoding and decoding AV1 video streams

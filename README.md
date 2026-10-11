@@ -23,6 +23,15 @@ curl+tar rather than `git clone` on purpose — a stock Mac has `curl`/`tar` bui
 
 ### After `dots all` finishes
 
+Finder Menu is installed by `dots apps`, but its Finder extension is not
+enabled automatically. To add its actions to Finder's right-click menu, run:
+
+```sh
+finder-menu enable
+```
+
+Before uninstalling Finder Menu, run `finder-menu disable`.
+
 1Password sign-in is a genuinely manual step nothing here can script past
 — `auth` and `restore` will show as **SKIPPED**, not failed, if it isn't
 done yet. Finish the setup by hand, in this order:
